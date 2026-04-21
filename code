@@ -1,0 +1,34 @@
+# Set sytle for plots
+sns.set_style('whitegrid')
+plt.style.use("fivethirtyeight")
+# This line helps to show the graph in notebook only
+%matplotlib inline
+
+# Removed: yf.pdr_override() - This was causing an AttributeError.
+# The pandas_datareader library (aliased as pdr) can directly use yfinance for data retrieval
+# without needing yf.pdr_override() in recent versions.
+
+# Create a list of tech
+tech_list = ['AAPL', 'GOOG', 'MSFT', 'AMZN']
+
+# Create end and start time for stock
+end = datetime.now()
+start = datetime(end.year - 1, end.month, end.day)
+
+# Download stock data of tech list and save it in global variables
+for stock in tech_list:
+  globals()[stock] = yf.download(stock, start, end)
+
+# Create list of company and their name
+company_list = [AAPL, GOOG, MSFT, AMZN] # This contains dataset for companies
+company_name = ["AAPL", "GOOG", "MICROSOFT", "AMAZON"]
+
+# Add company name to each company's dataframe
+for company, com_name in zip(company_list, company_name):
+  company["company_name"] = com_name
+
+# Concat all company dataframes into a single DataFrame 'df' after adding company names
+df = pd.concat(company_list, axis=0)
+
+# Show last 10 row of dataframe
+df.tail(100)
