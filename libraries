@@ -1,0 +1,12 @@
+# Import required modules
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pandas_datareader.data import DataReader
+import yfinance as yf
+from pandas_datareader import data as pdr
+from datetime import datetime
+from sklearn.preprocessing import MinMaxScaler
+from keras.models import Sequential
+from keras.layers import Dense, LSTM
