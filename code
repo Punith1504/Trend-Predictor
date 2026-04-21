@@ -1,0 +1,419 @@
+# Set sytle for plots
+sns.set_style('whitegrid')
+plt.style.use("fivethirtyeight")
+# This line helps to show the graph in notebook only
+%matplotlib inline
+
+# Removed: yf.pdr_override() - This was causing an AttributeError.
+# The pandas_datareader library (aliased as pdr) can directly use yfinance for data retrieval
+# without needing yf.pdr_override() in recent versions.
+
+# Create a list of tech
+tech_list = ['AAPL', 'GOOG', 'MSFT', 'AMZN']
+
+# Create end and start time for stock
+end = datetime.now()
+start = datetime(end.year - 1, end.month, end.day)
+
+# Download stock data of tech list and save it in global variables
+for stock in tech_list:
+  globals()[stock] = yf.download(stock, start, end)
+
+# Create list of company and their name
+company_list = [AAPL, GOOG, MSFT, AMZN] # This contains dataset for companies
+company_name = ["AAPL", "GOOG", "MICROSOFT", "AMAZON"]
+
+# Add company name to each company's dataframe
+for company, com_name in zip(company_list, company_name):
+  company["company_name"] = com_name
+
+# Concat all company dataframes into a single DataFrame 'df' after adding company names
+df = pd.concat(company_list, axis=0)
+
+# Show last 10 row of dataframe
+df.tail(100)
+
+
+# Show description of AAPL of dataframe
+AAPL.describe()
+
+# Show the info of dataframe
+AAPL.info()
+
+
+# Set figure and subplots
+plt.figure(figsize=(15, 10))
+plt.subplots_adjust(top=1.25, bottom=1.2) # Adjust margin to top and bottom
+
+# Create subplot for adjusted close time for each compnay
+for i, company in enumerate(company_list, 1):
+  # Create subplot
+  plt.subplot(2, 2, i)
+  # Plot the column
+  company['Adj Close'].plot()
+  # Set Y label
+  plt.ylabel('Adj Close')
+  # Set X label
+  plt.xlabel(None)
+  # Set title
+  plt.title(f"Closing Price of {tech_list[i - 1]}")
+
+# Automatically adjust the subplot parameters for better layout
+plt.tight_layout()
+
+
+
+
+# Set figure and subplots
+plt.figure(figsize=(15, 10))
+plt.subplots_adjust(top=1.25, bottom=1.2)
+
+# Create subplot for volumne for each compnay
+for i, company in enumerate(company_list, 1):
+  # Create subplot
+  plt.subplot(2, 2, i)
+  # Plot the column
+  company['Volume'].plot()
+  # Set Y label
+  plt.ylabel('Volume')
+  # Set X label
+  plt.xlabel(None)
+  # Set title
+  plt.title(f"Sales Volume for {tech_list[i - 1]}")
+
+# Automatically adjust the subplot parameters for better layout
+plt.tight_layout()
+
+
+
+# Create a list for moving average day
+ma_day = [10, 20, 50]
+
+# Create a new column for ma days
+for ma in ma_day:
+  for company in company_list:
+    column_name = f"MA for {ma} days"
+    company[column_name] = company['Adj Close'].rolling(ma).mean()
+
+# Plot the graph
+fig, axes = plt.subplots(nrows=2, ncols=2)
+fig.set_figheight(10)
+fig.set_figwidth(15)
+
+# Plot the graph for AAPL
+AAPL[['Adj Close', 'MA for 10 days', 'MA for 20 days', 'MA for 50 days']].plot(ax=axes[0,0])
+axes[0,0].set_title('APPLE')
+
+# Plot the graph for GOOG
+GOOG[['Adj Close', 'MA for 10 days', 'MA for 20 days', 'MA for 50 days']].plot(ax=axes[0,1])
+axes[0,1].set_title('GOOGLE')
+
+# Plot the graph for MSFT
+MSFT[['Adj Close', 'MA for 10 days', 'MA for 20 days', 'MA for 50 days']].plot(ax=axes[1,0])
+axes[1,0].set_title('MICROSOFT')
+
+# Plot the graph for AMZN
+AMZN[['Adj Close', 'MA for 10 days', 'MA for 20 days', 'MA for 50 days']].plot(ax=axes[1,1])
+axes[1,1].set_title('AMAZON')
+
+# Automatically adjust the subplot parameters for better layout
+fig.tight_layout()
+
+
+
+  # We'll use pct_change to find the percent change for each day
+for company in company_list:
+  company['Daily Return'] = company['Adj Close'].pct_change()
+
+# Then we'll plot the daily return percentage
+fig, axes = plt.subplots(nrows=2, ncols=2)
+fig.set_figheight(10)
+fig.set_figwidth(15)
+
+# Plot the graph for AAPL
+AAPL['Daily Return'].plot(ax=axes[0,0], legend=True, linestyle='--', marker='o')
+axes[0,0].set_title('APPLE')
+
+# Plot the graph for GOOG
+GOOG['Daily Return'].plot(ax=axes[0,1], legend=True, linestyle='--', marker='o')
+axes[0,1].set_title('GOOGLE')
+
+# Plot the graph for MSFT
+MSFT['Daily Return'].plot(ax=axes[1,0], legend=True, linestyle='--', marker='o')
+axes[1,0].set_title('MICROSOFT')
+
+# Plot the graph for AMZN
+AMZN['Daily Return'].plot(ax=axes[1,1], legend=True, linestyle='--', marker='o')
+axes[1,1].set_title('AMAZON')
+
+# Automatically adjust the subplot parameters for better layout
+fig.tight_layout()
+
+
+
+  # Set plot
+plt.figure(figsize=(12, 9))
+
+# Create subplot for Daily Return for each compnay
+for i, company in enumerate(company_list, 1):
+  plt.subplot(2, 2, i)
+  company['Daily Return'].hist(bins=50)
+  plt.xlabel('Daily Return')
+  plt.ylabel('Counts')
+  plt.title(f'{company_name[i - 1]}')
+
+plt.tight_layout()
+
+
+
+
+  # Grab all the closing prices for the tech stock list into one DataFrame
+
+closing_df = pdr.get_data_yahoo(tech_list, start=start, end=end)['Adj Close']
+
+# Make a new tech returns DataFrame
+tech_rets = closing_df.pct_change() # Percentage between prior and present data
+tech_rets.head()
+
+
+  # Comparing Google to itself should show a perfectly linear relationship
+sns.jointplot(x='GOOG', y='GOOG', data=tech_rets, kind='scatter', color='seagreen')
+sns.jointplot(x='GOOG', y='GOOG', data=tech_rets, kind='scatter', color='seagreen')
+
+
+
+  # We'll use joinplot to compare the daily returns of Google and Microsoft
+sns.jointplot(x='GOOG', y='MSFT', data=tech_rets, kind='scatter')
+
+
+
+  # We can simply call pairplot on our DataFrame for an automatic visual analysis
+# of all the comparisons
+
+sns.pairplot(tech_rets, kind='reg')
+
+
+
+  # Set up our figure by naming it returns_fig, call PairPLot on the DataFrame
+returns_fig = sns.PairGrid(closing_df)
+
+# Using map_upper we can specify what the upper triangle will look like.
+returns_fig.map_upper(plt.scatter,color='purple')
+
+# We can also define the lower triangle in the figure, inclufing the plot type (kde) or the color map (BluePurple)
+returns_fig.map_lower(sns.kdeplot,cmap='cool_d')
+
+# Finally we'll define the diagonal as a series of histogram plots of the daily return
+returns_fig.map_diag(plt.hist,bins=30)
+
+
+
+  # Import the necessary libraries for data visualization and analysis
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Create a new figure for plotting with a specified size
+plt.figure(figsize=(12, 10))
+
+# Create the first subplot in a 2x2 grid of subplots
+plt.subplot(2, 2, 1)
+
+# Generate a heatmap of the correlation matrix for daily stock returns (tech_rets)
+# - 'tech_rets.corr()' calculates the correlation between different tech stocks' daily returns
+# - 'annot=True' adds numeric values to the heatmap cells for better readability
+# - 'cmap='summer'' sets the color map for the heatmap
+plt.title('Correlation of stock return')  # Set the title for the subplot
+sns.heatmap(tech_rets.corr(), annot=True, cmap='summer')
+
+# Create the second subplot in the 2x2 grid of subplots
+plt.subplot(2, 2, 2)
+
+# Generate a heatmap of the correlation matrix for stock closing prices (closing_df)
+# - 'closing_df.corr()' calculates the correlation between different tech stocks' closing prices
+# - 'annot=True' adds numeric values to the heatmap cells for better readability
+# - 'cmap='summer'' sets the color map for the heatmap
+plt.title('Correlation of stock closing price')  # Set the title for the subplot
+sns.heatmap(closing_df.corr(), annot=True, cmap='summer')
+
+# Display the final plot with both subplots
+plt.show()
+
+
+
+  # Drop rows with missing values (NaN) from the tech_rets DataFrame
+rets = tech_rets.dropna()
+
+# Calculate the area of the data points for the scatter plot
+area = np.pi * 20
+
+# Create a new figure for the scatter plot with a specified size
+plt.figure(figsize=(10, 8))
+
+# Create a scatter plot of expected return (x-axis) vs. risk (y-axis)
+plt.scatter(rets.mean(), rets.std(), s=area)
+
+# Label the x-axis with 'Expected return' and the y-axis with 'Risk'
+plt.xlabel('Expected return')
+plt.ylabel('Risk')
+
+# Add labels to the data points with annotations
+for label, x, y in zip(rets.columns, rets.mean(), rets.std()):
+    # 'label' is the stock's name, 'x' is its mean return, and 'y' is its standard deviation (risk)
+    # 'xytext' sets an offset from the data point for the label
+    # 'arrowprops' adds an arrow connecting the label to the data point for visualization
+    plt.annotate(label, xy=(x, y), xytext=(50, 50), textcoords='offset points', ha='right', va='bottom',
+                 arrowprops=dict(arrowstyle='-', color='blue', connectionstyle='arc3,rad=-0.3'))
+
+
+
+# Get the stock quote
+df = pdr.get_data_yahoo('AAPL', start='2012-01-01', end=datetime.now())
+# Show teh data
+df
+
+
+
+# Create a new Matplotlib figure for the plot with a specified size (16 units wide and 6 units tall)
+plt.figure(figsize=(16, 6))
+# Set the title of the plot
+plt.title('Close Price History')
+# Plot the 'Close' price data from the DataFrame 'df'
+plt.plot(df['Close'])
+# Add a label to the x-axis
+plt.xlabel('Date', fontsize=18)
+# Add a label to the y-axis
+plt.ylabel('Close Price USD ($)', fontsize=18)
+# Display the plot
+plt.show()
+
+
+  # Create a new dataframe with only the 'Close column
+data = df.filter(['Close'])
+# Convert the dataframe to a numpy array
+dataset = data.values
+# Get the number of rows to train the model on
+training_data_len = int(np.ceil( len(dataset) * .95 ))
+
+training_data_len
+
+
+# Scale the data
+# Create a MinMaxScaler object with a specified feature range, usually (0, 1)
+scaler = MinMaxScaler(feature_range=(0,1))
+# Use the MinMaxScaler to transform the 'dataset' into a scaled version
+scaled_data = scaler.fit_transform(dataset)
+
+scaled_data
+
+
+
+# Create the training data set
+
+# Create the scaled training data set
+train_data = scaled_data[0:int(training_data_len), :]
+
+# Split the data into x_train and y_train data sets
+x_train = []
+y_train = []
+
+# Iterate through the training data, considering a window of 60 data points
+for i in range(60, len(train_data)):
+  # Append the last 60 data points (x) to x_train
+  x_train.append(train_data[i-60:i, 0])
+  # Append the next data point (y) to y_train
+  y_train.append(train_data[i, 0])
+
+  # If we're in the initial loop iterations, print the data for illustration
+  if i <= 61:
+    print(x_train)
+    print(y_train)
+    print()
+
+# Convert the x_train and y_train lists to NumPy arrays
+x_train, y_train = np.array(x_train), np.array(y_train)
+
+# Reshape the x_train data to match the input shape expected by some machine learning models (usually (samples, time steps, features))
+x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1))
+x_train.shape
+
+
+
+
+  # Create a Sequential model
+model = Sequential()
+
+# Add the first LSTM layer with 128 units, return_sequences=True, and specify the input shape
+model.add(LSTM(128, return_sequences=True, input_shape=(x_train.shape[1], 1)))
+
+# Add the second LSTM layer with 64 units and return_sequences=False
+model.add(LSTM(64, return_sequences=False))
+
+# Add a Dense (fully connected) layer with 25 units
+model.add(Dense(25))
+
+# Add another Dense layer with a single unit, which is common for regression tasks
+model.add(Dense(1))
+
+# Compile the model, specifying the optimizer and loss function
+model.compile(optimizer='adam', loss='mean_squared_error')
+
+# Train the model using the training data (x_train and y_train)
+# - 'batch_size=1' indicates that the model is updated after processing each individual sample
+# - 'epochs=1' means the model will iterate through the entire training dataset once
+model.fit(x_train, y_train, batch_size=1, epochs=1)
+
+
+
+  # Create the testing data set
+# Create a new array containing scaled values from index 1543 to 2002
+test_data = scaled_data[training_data_len - 60: , :]
+# Create the data sets x_test and y_test
+x_test = []
+y_test = dataset[training_data_len:, :]
+for i in range(60, len(test_data)):
+  x_test.append(test_data[i-60:i, 0])
+
+# Convert the data to a numpy array
+x_test = np.array(x_test)
+
+# Reshape the data
+x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1 ))
+
+# Get the models predicted price values
+predictions = model.predict(x_test)
+predictions = scaler.inverse_transform(predictions)
+
+# Get the root mean squared error (RMSE)
+rmse = np.sqrt(np.mean(((predictions - y_test) ** 2)))
+rmse
+
+
+
+# Select the training data and validation data
+train = data[:training_data_len]
+valid = data[training_data_len:]
+
+# Add a new column 'Predictions' to the validation data DataFrame to store model predictions
+valid['Predictions'] = predictions
+# Create a figure for plotting with a specific size
+plt.figure(figsize=(16, 6))
+# Set the title of the plot
+plt.title('Model')
+# Label the x-axis
+plt.xlabel('Date', fontsize=18)
+# Label the y-axis
+plt.ylabel('Close Price USD ($)', fontsize=18)
+# Plot the training data's 'Close' prices
+plt.plot(train['Close'])
+# Plot the validation data's 'Close' prices and the model's predictions
+plt.plot(valid[['Close', 'Predictions']])
+# Add a legend to differentiate the lines on the plot
+plt.legend(['Train', 'Val', 'Predictions'], loc='lower right')
+# Display the plot
+plt.show()
+
+
+
+  # Show the valid and predicted prices
+valid
+
